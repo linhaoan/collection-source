@@ -8,8 +8,9 @@
 */  
   
 package source.java.util;
-
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The root interface in the <i>collection hierarchy</i>.  A collection
@@ -301,6 +302,8 @@ public interface Collection<E> extends Iterable<E>{
      * operation).  Returns <tt>true</tt> if this collection changed as a
      * result of the call.  (Returns <tt>false</tt> if this collection does
      * not permit duplicates and already contains the specified element.)<p>
+     * 保该集合包含指定的元素（可选操作）。如果该集合由于调用而更改，那么返回true。
+     * （如果这个集合不允许重复，并且已经包含了指定的元素，则返回false。）<br/>
      *
      * Collections that support this operation may place limitations on what
      * elements may be added to this collection.  In particular, some
@@ -308,27 +311,251 @@ public interface Collection<E> extends Iterable<E>{
      * impose restrictions on the type of elements that may be added.
      * Collection classes should clearly specify in their documentation any
      * restrictions on what elements may be added.<p>
-     *
+     * 支持此操作的集合可能对将添加到该集合的元素进行限制。
+     * 特别地，一些集合将拒绝添加空元素，而另一些集合将对可能添加的元素的类型施加限制。
+     * 集合类应该清楚地在它们的文档中指定任何可能添加的元素的限制。<br/>
+     * 
      * If a collection refuses to add a particular element for any reason
      * other than that it already contains the element, it <i>must</i> throw
      * an exception (rather than returning <tt>false</tt>).  This preserves
      * the invariant that a collection always contains the specified element
-     * after this call returns.
-     *
+     * after this call returns.<br/>
+     * 如果一个集合拒绝为任何原因添加特定元素，除了它已经包含该元素，它必须抛出一个异常（而不是返回false）。
+     * 这保留了在调用返回之后集合中始终包含指定元素的不变式。
      * @param e element whose presence in this collection is to be ensured
      * @return <tt>true</tt> if this collection changed as a result of the
      *         call
+     *         如果这个集合因为调用而改变了
      * @throws UnsupportedOperationException if the <tt>add</tt> operation
      *         is not supported by this collection
+     *         如果这个集合不支持add操作
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this collection
+     *         如果指定元素的类阻止它被添加到这个集合中
      * @throws NullPointerException if the specified element is null and this
      *         collection does not permit null elements
+     *         如果指定的元素为null，这个集合不允许空元素
      * @throws IllegalArgumentException if some property of the element
      *         prevents it from being added to this collection
+     *         如果元素的某个属性阻止它被添加到这个集合中
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to insertion restrictions
+     *         如果由于插入限制而不能在此时添加元素
      */
     boolean add(E e);
+    
+    /**
+     * Removes a single instance of the specified element from this
+     * collection, if it is present (optional operation).  More formally,
+     * removes an element <tt>e</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>, if
+     * this collection contains one or more such elements.  Returns
+     * <tt>true</tt> if this collection contained the specified element (or
+     * equivalently, if this collection changed as a result of the call).
+     * 从这个集合中删除指定元素的一个实例，如果它存在（可选操作）。
+     * 更正式地，删除元素e这样的元素（o==null？如果这个集合包含一个或多个这样的元素，那么e==null:o.equals（e））。
+     * 如果这个集合包含指定的元素（或者，如果该集合由于调用的结果而改变），则返回true。
+     *
+     * @param o element to be removed from this collection, if present
+     * @return <tt>true</tt> if an element was removed as a result of this call
+     * 如果一个元素因为这个调用而被移除
+     * @throws ClassCastException if the type of the specified element
+     *         is incompatible with this collection
+     *         (<a href="#optional-restrictions">optional</a>)
+     *         如果指定元素的类型与此集合不兼容
+     *         
+     * @throws NullPointerException if the specified element is null and this
+     *         collection does not permit null elements
+     *         (<a href="#optional-restrictions">optional</a>)
+     *         如果指定的元素为null，这个集合不允许空元素
+     * @throws UnsupportedOperationException if the <tt>remove</tt> operation
+     *         is not supported by this collection
+     *         如果这个集合不支持删除操作
+     */
+    boolean remove(Object o);
+    
+    // Bulk Operations
+    // 批量操作
+    
+    /**
+     * Returns <tt>true</tt> if this collection contains all of the elements
+     * in the specified collection.
+     * 如果该集合包含指定集合中的所有元素，那么返回true。
+     * 
+     * @param  c collection to be checked for containment in this collection
+     * 在这个集合中，要检查包含容器的c集合
+     * @return <tt>true</tt> if this collection contains all of the elements
+     *         in the specified collection
+     *         如果这个集合包含指定集合中的所有元素，那么返回true
+     * @throws ClassCastException if the types of one or more elements
+     *         in the specified collection are incompatible with this
+     *         collection
+     *         如果指定集合中的一个或多个元素的类型与此集合不兼容
+     *         (<a href="#optional-restrictions">optional</a>)
+     * @throws NullPointerException if the specified collection contains one
+     *         or more null elements and this collection does not permit null
+     *         elements
+     *         (<a href="#optional-restrictions">optional</a>),
+     *         or if the specified collection is null.
+     *         如果指定的集合包含一个或多个空元素，这个集合不允许空元素（可选），或者指定的集合是null。
+     * @see    #contains(Object)
+     */
+    boolean containsAll(Collection<?> c);
+    
+    /**
+     * Adds all of the elements in the specified collection to this collection
+     * (optional operation).  The behavior of this operation is undefined if
+     * the specified collection is modified while the operation is in progress.
+     * (This implies that the behavior of this call is undefined if the
+     * specified collection is this collection, and this collection is
+     * nonempty.)
+     * 将指定集合中的所有元素添加到这个集合中（可选操作）。如果在操作过程中修改了指定的集合，那么该操作的行为是未定义的。
+     * （这意味着如果指定的集合是这个集合，那么这个调用的行为是未定义的，并且这个集合是非空的。）
+     *
+     * @param c collection containing elements to be added to this collection
+     * 包含要添加到这个集合中的元素的c集合
+     * @return <tt>true</tt> if this collection changed as a result of the call
+     * 如果这个集合因为调用而改变了
+     * @throws UnsupportedOperationException if the <tt>addAll</tt> operation
+     *         is not supported by this collection
+     * @throws ClassCastException if the class of an element of the specified
+     *         collection prevents it from being added to this collection
+     * @throws NullPointerException if the specified collection contains a
+     *         null element and this collection does not permit null elements,
+     *         or if the specified collection is null
+     * @throws IllegalArgumentException if some property of an element of the
+     *         specified collection prevents it from being added to this
+     *         collection
+     * @throws IllegalStateException if not all the elements can be added at
+     *         this time due to insertion restrictions
+     * @see #add(Object)
+     */
+    boolean addAll(Collection<? extends E> c);
+    
+    /**
+     * Removes all of this collection's elements that are also contained in the
+     * specified collection (optional operation).  After this call returns,
+     * this collection will contain no elements in common with the specified
+     * collection.
+     * 删除在指定集合中包含的所有这些集合的元素（可选操作）。
+     * 在这个调用返回之后，这个集合将不包含与指定集合相同的元素。
+     * @param c collection containing elements to be removed from this collection
+     * @return <tt>true</tt> if this collection changed as a result of the
+     *         call
+     * @throws UnsupportedOperationException if the <tt>removeAll</tt> method
+     *         is not supported by this collection
+     * @throws ClassCastException if the types of one or more elements
+     *         in this collection are incompatible with the specified
+     *         collection
+     *         (<a href="#optional-restrictions">optional</a>)
+     * @throws NullPointerException if this collection contains one or more
+     *         null elements and the specified collection does not support
+     *         null elements
+     *         (<a href="#optional-restrictions">optional</a>),
+     *         or if the specified collection is null
+     * @see #remove(Object)
+     * @see #contains(Object)
+     */
+    boolean removeAll(Collection<?> c);
+    
+    /**
+     * Retains only the elements in this collection that are contained in the
+     * specified collection (optional operation).  In other words, removes from
+     * this collection all of its elements that are not contained in the
+     * specified collection.
+     * 只保留该集合中包含在指定集合中的元素（可选操作）。
+     * 换句话说，从这个集合中删除所有未包含在指定集合中的元素。
+     * @param c collection containing elements to be retained in this collection
+     * @return <tt>true</tt> if this collection changed as a result of the call
+     * @throws UnsupportedOperationException if the <tt>retainAll</tt> operation
+     *         is not supported by this collection
+     *         
+     * @throws ClassCastException if the types of one or more elements
+     *         in this collection are incompatible with the specified
+     *         collection
+     *         如果保留所有操作不受此集合的支持
+     *         (<a href="#optional-restrictions">optional</a>)
+     * @throws NullPointerException if this collection contains one or more
+     *         null elements and the specified collection does not permit null
+     *         elements
+     *         如果这个集合包含一个或多个空元素，并且指定的集合不允许空元素（可选），或者指定的集合是null
+     *         (<a href="#optional-restrictions">optional</a>),
+     *         or if the specified collection is null
+     * @see #remove(Object)
+     * @see #contains(Object)
+     */
+    boolean retainAll(Collection<?> c);
+    
+    /**
+     * Removes all of the elements from this collection (optional operation).
+     * The collection will be empty after this method returns.
+     * 从这个集合中删除所有的元素（可选操作）。在该方法返回之后，集合将是空的。
+     * @throws UnsupportedOperationException if the <tt>clear</tt> operation
+     *         is not supported by this collection
+     */
+    void clear();
+    
+    // Comparison and hashing
+    // 比较和散列
+
+    /**
+     * Compares the specified object with this collection for equality. <p>
+     * 将指定的对象与该集合进行比较，以获得相等性。
+     * 
+     * While the <tt>Collection</tt> interface adds no stipulations to the
+     * general contract for the <tt>Object.equals</tt>, programmers who
+     * implement the <tt>Collection</tt> interface "directly" (in other words,
+     * create a class that is a <tt>Collection</tt> but is not a <tt>Set</tt>
+     * or a <tt>List</tt>) must exercise care if they choose to override the
+     * <tt>Object.equals</tt>.  It is not necessary to do so, and the simplest
+     * course of action is to rely on <tt>Object</tt>'s implementation, but
+     * the implementor may wish to implement a "value comparison" in place of
+     * the default "reference comparison."  (The <tt>List</tt> and
+     * <tt>Set</tt> interfaces mandate such value comparisons.)<p>
+     * 尽管集合接口没有为对象的一般契约添加任何规定。
+     * 等于，实现集合接口的程序员“直接”（换句话说，创建一个集合，但不是集合或列表），如果他们选择覆盖对象.equals，就必须小心谨慎。
+     * 没有必要这样做，最简单的操作方法是依赖对象的实现，但是实现者可能希望实现一个“值比较”，代替默认的“引用比较”。（列表和设置接口要求进行这样的值比较。）
+     * 
+     * The general contract for the <tt>Object.equals</tt> method states that
+     * equals must be symmetric (in other words, <tt>a.equals(b)</tt> if and
+     * only if <tt>b.equals(a)</tt>).  The contracts for <tt>List.equals</tt>
+     * and <tt>Set.equals</tt> state that lists are only equal to other lists,
+     * and sets to other sets.  Thus, a custom <tt>equals</tt> method for a
+     * collection class that implements neither the <tt>List</tt> nor
+     * <tt>Set</tt> interface must return <tt>false</tt> when this collection
+     * is compared to any list or set.  (By the same logic, it is not possible
+     * to write a class that correctly implements both the <tt>Set</tt> and
+     * <tt>List</tt> interfaces.)
+     * 对象的一般契约。相等的方法说明，等号必须是对称的（换句话说，a等于a（b）如果且仅当b等于（a））。合同列表。
+     * 等于和set0。等于状态列表仅等于其他列表，并设置为其他集合。
+     * 因此,自定义等于一个集合类实现方法列表和设置界面必须返回假当这个集合是任何列表或组相比。(同样的逻辑,它是不可能正确地编写一个类,实现了集和列表界面。)
+     * @param o object to be compared for equality with this collection
+     * @return <tt>true</tt> if the specified object is equal to this
+     * collection
+     *
+     * @see Object#equals(Object)
+     * @see Set#equals(Object)
+     * @see List#equals(Object)
+     */
+    boolean equals(Object o);
+
+    /**
+     * Returns the hash code value for this collection.  While the
+     * <tt>Collection</tt> interface adds no stipulations to the general
+     * contract for the <tt>Object.hashCode</tt> method, programmers should
+     * take note that any class that overrides the <tt>Object.equals</tt>
+     * method must also override the <tt>Object.hashCode</tt> method in order
+     * to satisfy the general contract for the <tt>Object.hashCode</tt> method.
+     * In particular, <tt>c1.equals(c2)</tt> implies that
+     * <tt>c1.hashCode()==c2.hashCode()</tt>.
+     * 返回这个集合的散列码值。尽管集合接口没有为对象的一般契约添加任何规定。
+     * hashCode方法，程序员应该注意到任何覆盖该对象的类。equals方法也必须覆盖对象。
+     * hashCode方法是为了满足对象的一般契约。hashCode方法。特别地，c1.equals（c2）意味着c1.hashcode（）==c2.hashcode（）。
+     * @return the hash code value for this collection
+     *
+     * @see Object#hashCode()
+     * @see Object#equals(Object)
+     */
+    int hashCode();
 }
   
