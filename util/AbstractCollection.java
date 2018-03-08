@@ -145,15 +145,16 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      */
     public Object[] toArray() {
         // Estimate size of array; be prepared to see more or fewer elements
-    	// 估计数组的大小;准备好看到更多或更少的元素	
+    	// 估计数组的大小;准备好看到更多或更少的元素
         Object[] r = new Object[size()];
         Iterator<E> it = iterator();
-        for (int i = 0; i < r.length; i++) {
-            if (! it.hasNext()) // fewer elements than expected 比预期的更少的元素
-                return Arrays.copyOf(r, i);
-            r[i] = it.next();
-        }
-        return it.hasNext() ? finishToArray(r, it) : r;
+		for (int i = 0; i < r.length; i++) {
+			if(!it.hasNext()) { // fewer elements than expected 比预期少的元素
+				return Arrays.copyOf(r, i);
+			}
+			r[i] = it.next();
+		}
+		 return it.hasNext() ? finishToArray(r, it) : r;
     }
 
     /**
