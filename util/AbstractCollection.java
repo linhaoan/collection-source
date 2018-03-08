@@ -154,6 +154,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
 			}
 			r[i] = it.next();
 		}
+		// more elements than expected  比预期多的元素
 		 return it.hasNext() ? finishToArray(r, it) : r;
     }
 
@@ -172,6 +173,8 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * called only as an optimization hint; the correct result is returned
      * even if the iterator returns a different number of elements.
      *
+     *
+     * 
      * <p>This method is equivalent to:
      *
      *  <pre> {@code
@@ -218,6 +221,9 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * Some VMs reserve some header words in an array.
      * Attempts to allocate larger arrays may result in
      * OutOfMemoryError: Requested array size exceeds VM limit
+     * 
+     * 要分配的数组的最大大小。一些vm在数组中保留一些标头词。
+     * 分配较大数组的尝试可能导致OutOfMemoryError:请求的数组大小超过VM限制。
      */
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
@@ -225,12 +231,15 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * Reallocates the array being used within toArray when the iterator
      * returned more elements than expected, and finishes filling it from
      * the iterator.
-     *
+     * 当迭代器返回比预期更多的元素，并从迭代器中完成填充时，重新分配在toArray中使用的数组。
      * @param r the array, replete with previously stored elements
+     * 数组，包含先前存储的元素。
      * @param it the in-progress iterator over this collection
+     * 它正在进行的迭代器在这个集合
      * @return array containing the elements in the given array, plus any
      *         further elements returned by the iterator, trimmed to size
-     */
+     *         包含给定数组中的元素的数组，以及迭代器返回的任何其他元素，这些元素都被裁剪成大小。
+     */ 
     @SuppressWarnings("unchecked")
     private static <T> T[] finishToArray(T[] r, Iterator<?> it) {
         int i = r.length;
