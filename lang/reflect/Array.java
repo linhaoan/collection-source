@@ -7,7 +7,7 @@
  *  
 */  
   
-package source.java.reflect;  
+package source.java.lang.reflect;  
 /**
  * The {@code Array} class provides static methods to dynamically create and
  * access Java arrays.
