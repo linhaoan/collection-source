@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import java.util.RandomAccess;
 
 /**
  * This class provides a skeletal implementation of the {@link List}
@@ -309,6 +310,17 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         return new Itr();
     }
     
+    /**
+     * {@inheritDoc}
+     *
+     * <p>This implementation returns {@code listIterator(0)}.
+     *
+     * @see #listIterator(int)
+     */
+    public ListIterator<E> listIterator() {
+        return listIterator(0);
+    }
+    
     private class Itr implements Iterator<E> {
     	 
         /**
@@ -377,51 +389,120 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     
     private class ListItr extends Itr implements ListIterator<E> {
 
+        ListItr(int index) {
+            cursor = index;
+        }
+        
 		@Override
 		public boolean hasPrevious() {
-			  
-			//  Auto-generated method stub  
-			return false;
+			return cursor!=0;
 		}
 
 		@Override
 		public E previous() {
-			  
-			//  Auto-generated method stub  
-			return null;
+			checkForComodification();
+			try {
+				int i = cursor - 1;
+				E previous = get(i);
+				lastRet = cursor = i;
+				return previous;
+			} catch (IndexOutOfBoundsException e) {
+				checkForComodification();
+				throw new NoSuchElementException();
+			}
+
 		}
 
 		@Override
 		public int nextIndex() {
-			  
-			//  Auto-generated method stub  
-			return 0;
+			return cursor;
 		}
 
 		@Override
 		public int previousIndex() {
-			  
-			//  Auto-generated method stub  
-			return 0;
+			return cursor-1;
 		}
 
 		@Override
 		public void set(E e) {
-			  
-			//  Auto-generated method stub  
-			
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+                AbstractList.this.set(lastRet, e);
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
 		}
 
 		@Override
 		public void add(E e) {
-			  
-			//  Auto-generated method stub  
-			
+	           checkForComodification();
+
+	            try {
+	                int i = cursor;
+	                AbstractList.this.add(i, e);
+	                lastRet = -1;
+	                cursor = i + 1;
+	                expectedModCount = modCount;
+	            } catch (IndexOutOfBoundsException ex) {
+	                throw new ConcurrentModificationException();
+	            }
 		}
     	
     }
     
-    
+    /**
+     * {@inheritDoc}
+     * 
+     * <p>This implementation returns a list that subclasses
+     * {@code AbstractList}.  The subclass stores, in private fields, the
+     * offset of the subList within the backing list, the size of the subList
+     * (which can change over its lifetime), and the expected
+     * {@code modCount} value of the backing list.  There are two variants
+     * of the subclass, one of which implements {@code RandomAccess}.
+     * If this list implements {@code RandomAccess} the returned list will
+     * be an instance of the subclass that implements {@code RandomAccess}.
+     * 这个实现返回一个子类AbstractList的列表。子类存储在私有字段中，在备份列表中的子列表的偏移量，子列表的大小(可以在它的生命周期中改变)，以及支持列表的预期的modCount值。这个子类有两个变种，其中一个实现了随机访问。
+     * 如果这个列表实现了随机访问，返回的列表将是实现随机访问的子类的一个实例。
+     *
+     * <p>The subclass's {@code set(int, E)}, {@code get(int)},
+     * {@code add(int, E)}, {@code remove(int)}, {@code addAll(int,
+     * Collection)} and {@code removeRange(int, int)} methods all
+     * delegate to the corresponding methods on the backing abstract list,
+     * after bounds-checking the index and adjusting for the offset.  The
+     * {@code addAll(Collection c)} method merely returns {@code addAll(size,
+     * c)}.
+     * 子类的集合set(int, E)， get(int)， add(int, E)， remove(int)， 
+     * addAll(int, Collection)和removeRange(int, int)方法，
+     * 所有的方法都委托给后面的抽象列表中相应的方法，
+     * 在bounds检查索引和调整偏移量之后。
+     * addAll(集合c)方法仅返回addAll(size, c)。
+     * 
+     * <p>The {@code listIterator(int)} method returns a "wrapper object"
+     * over a list iterator on the backing list, which is created with the
+     * corresponding method on the backing list.  The {@code iterator} method
+     * merely returns {@code listIterator()}, and the {@code size} method
+     * merely returns the subclass's {@code size} field.
+     * listIterator(int)方法在后备列表上的列表迭代器上返回一个“包装器对象”，该列表是用相应的方法在后备列表中创建的。
+     * 迭代器方法只返回listIterator()，而size方法只返回子类的大小字段。
+     * 
+     * <p>All methods first check to see if the actual {@code modCount} of
+     * the backing list is equal to its expected value, and throw a
+     * {@code ConcurrentModificationException} if it is not.
+     * 先看看所有方法的实际modCount支持列表等于它的期望值,并抛出ConcurrentModificationException如果不是。
+     * @throws IndexOutOfBoundsException if an endpoint index value is out of range
+     *         {@code (fromIndex < 0 || toIndex > size)}
+     * @throws IllegalArgumentException if the endpoint indices are out of order
+     *         {@code (fromIndex > toIndex)}
+     */
+    public List<E> subList(int fromIndex, int toIndex) {
+        return (this instanceof RandomAccess ?
+                new RandomAccessSubList<>(this, fromIndex, toIndex) :
+                new SubList<>(this, fromIndex, toIndex));
+    }
     
   // Comparison and hashing
     
@@ -505,6 +586,177 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     
     private String outOfBoundsMsg(int index) {
         return "Index: "+index+", Size: "+size();
+    }
+    
+    class SubList<E> extends AbstractList<E> {
+        private final AbstractList<E> l;
+        private final int offset;
+        private int size;
+
+        SubList(AbstractList<E> list, int fromIndex, int toIndex) {
+            if (fromIndex < 0)
+                throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+            if (toIndex > list.size())
+                throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+            if (fromIndex > toIndex)
+                throw new IllegalArgumentException("fromIndex(" + fromIndex +
+                                                   ") > toIndex(" + toIndex + ")");
+            l = list;
+            offset = fromIndex;
+            size = toIndex - fromIndex;
+            this.modCount = l.modCount;
+        }
+
+        public E set(int index, E element) {
+            rangeCheck(index);
+            checkForComodification();
+            return l.set(index+offset, element);
+        }
+
+        public E get(int index) {
+            rangeCheck(index);
+            checkForComodification();
+            return l.get(index+offset);
+        }
+
+        public int size() {
+            checkForComodification();
+            return size;
+        }
+
+        public void add(int index, E element) {
+            rangeCheckForAdd(index);
+            checkForComodification();
+            l.add(index+offset, element);
+            this.modCount = l.modCount;
+            size++;
+        }
+
+        public E remove(int index) {
+            rangeCheck(index);
+            checkForComodification();
+            E result = l.remove(index+offset);
+            this.modCount = l.modCount;
+            size--;
+            return result;
+        }
+
+        protected void removeRange(int fromIndex, int toIndex) {
+            checkForComodification();
+            l.removeRange(fromIndex+offset, toIndex+offset);
+            this.modCount = l.modCount;
+            size -= (toIndex-fromIndex);
+        }
+
+        public boolean addAll(Collection<? extends E> c) {
+            return addAll(size, c);
+        }
+
+        public boolean addAll(int index, Collection<? extends E> c) {
+            rangeCheckForAdd(index);
+            int cSize = c.size();
+            if (cSize==0)
+                return false;
+
+            checkForComodification();
+            l.addAll(offset+index, c);
+            this.modCount = l.modCount;
+            size += cSize;
+            return true;
+        }
+
+        public Iterator<E> iterator() {
+            return listIterator();
+        }
+
+        public ListIterator<E> listIterator(final int index) {
+            checkForComodification();
+            rangeCheckForAdd(index);
+
+            return new ListIterator<E>() {
+                private final ListIterator<E> i = l.listIterator(index+offset);
+
+                public boolean hasNext() {
+                    return nextIndex() < size;
+                }
+
+                public E next() {
+                    if (hasNext())
+                        return i.next();
+                    else
+                        throw new NoSuchElementException();
+                }
+
+                public boolean hasPrevious() {
+                    return previousIndex() >= 0;
+                }
+
+                public E previous() {
+                    if (hasPrevious())
+                        return i.previous();
+                    else
+                        throw new NoSuchElementException();
+                }
+
+                public int nextIndex() {
+                    return i.nextIndex() - offset;
+                }
+
+                public int previousIndex() {
+                    return i.previousIndex() - offset;
+                }
+
+                public void remove() {
+                    i.remove();
+                    SubList.this.modCount = l.modCount;
+                    size--;
+                }
+
+                public void set(E e) {
+                    i.set(e);
+                }
+
+                public void add(E e) {
+                    i.add(e);
+                    SubList.this.modCount = l.modCount;
+                    size++;
+                }
+            };
+        }
+
+        public List<E> subList(int fromIndex, int toIndex) {
+            return new SubList<>(this, fromIndex, toIndex);
+        }
+
+        private void rangeCheck(int index) {
+            if (index < 0 || index >= size)
+                throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+        }
+
+        private void rangeCheckForAdd(int index) {
+            if (index < 0 || index > size)
+                throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+        }
+
+        private String outOfBoundsMsg(int index) {
+            return "Index: "+index+", Size: "+size;
+        }
+
+        private void checkForComodification() {
+            if (this.modCount != l.modCount)
+                throw new ConcurrentModificationException();
+        }
+    }
+    
+    class RandomAccessSubList<E> extends SubList<E> implements RandomAccess {
+        RandomAccessSubList(AbstractList<E> list, int fromIndex, int toIndex) {
+        	//TODO  疑问
+            super(list, fromIndex, toIndex);
+        }
+
+        public List<E> subList(int fromIndex, int toIndex) {
+            return new RandomAccessSubList<>(this, fromIndex, toIndex);
+        }
     }
 }
   
