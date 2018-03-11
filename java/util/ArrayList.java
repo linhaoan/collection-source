@@ -821,15 +821,16 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
     
     private boolean batchRemove(Collection<?> c, boolean complement) {
         final Object[] elementData = this.elementData;
-        int r = 0, w = 0;
+        int r = 0, w = 0; // w是重新存元素时的索引，r是原来的索引
         boolean modified = false;
         try {
-        	//complement 为true ，求交集
-        	//如果包含，
         	
-        	//complement 为false ，求差集
-        	
-        	
+        	// removeAll 求差集 .complement 为false ，        	
+        	// 1,如果集合c中包含elementData的元素e，
+        	// 则c.contains(elementData[r])为true，complement 为false ,if不成立，if结束；
+        	       	
+        	// 2,如果c不包含elementData的元素e，则if成立，将此元素e赋值给elementData[w++]
+        	// 即elementData保留了c中没有的元素，也就是删除了C中存在的所有元素】。
             for (; r < size; r++)
                 if (c.contains(elementData[r]) == complement)
                     elementData[w++] = elementData[r];
@@ -837,12 +838,18 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
             // Preserve behavioral compatibility with AbstractCollection,
             // even if c.contains() throws.
             if (r != size) {
+            	// if (r != size)，则将elementData未参加比较的元素arraycopy到elementData后面；
+            	// 新索引w加上刚arraycopy的数目
                 System.arraycopy(elementData, r,
                                  elementData, w,
                                  size - r);
                 w += size - r;
             }
             if (w != size) {
+            	// 此时w还不等于size，则将w后的元素移除，为什么移除（调用了arraycopy，详见fastRemove）。
+            	// 只有执行了if (w != size)（事实上只要c中含有elementData的元素，w肯定不等于size），
+            	// 才令modified = true，
+            	// 才说明remove成功，返回true，否则返回false。
                 // clear to let GC do its work
                 for (int i = w; i < size; i++)
                     elementData[i] = null;
