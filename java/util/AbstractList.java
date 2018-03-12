@@ -588,7 +588,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         return "Index: "+index+", Size: "+size();
     }
     
-    class SubList<E> extends AbstractList<E> {
+class SubList<E> extends AbstractList<E> {
         private final AbstractList<E> l;
         private final int offset;
         private int size;
