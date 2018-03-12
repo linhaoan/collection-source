@@ -13,6 +13,8 @@ import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.Vector;
 
+import sun.misc.SharedSecrets;
+
 /**
  * Resizable-array implementation of the <tt>List</tt> interface.  Implements
  * all optional list operations, and permits all elements, including
@@ -260,6 +262,13 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
 
         ensureExplicitCapacity(minCapacity);
     }
+    
+    private static int calculateCapacity(Object[] elementData, int minCapacity) {
+        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+            return Math.max(DEFAULT_CAPACITY, minCapacity);
+        }
+        return minCapacity;
+        }
     
     private void ensureExplicitCapacity(int minCapacity) {
         modCount++;
@@ -859,5 +868,64 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
             }
         }
         return modified;
+    }
+    
+    /**
+     * Save the state of the <tt>ArrayList</tt> instance to a stream (that
+     * is, serialize it).
+     * 将ArrayList实例的状态保存到一个流（也就是序列化它）。
+     * @serialData The length of the array backing the <tt>ArrayList</tt>
+     *             instance is emitted (int), followed by all of its elements
+     *             (each an <tt>Object</tt>) in the proper order.
+     *             数组支持ArrayList实例的数组的长度被释放（int），然后以适当的顺序执行所有的元素（每个对象）。
+     */
+    private void writeObject(java.io.ObjectOutputStream s)
+        throws java.io.IOException{
+        // Write out element count, and any hidden stuff
+    	// 写入元素计数，以及任何隐藏的内容
+        int expectedModCount = modCount;
+        s.defaultWriteObject();
+
+        // Write out size as capacity for behavioural compatibility with clone()
+        // 把大小作为与克隆（）行为兼容性的能力
+        s.writeInt(size);
+
+        // Write out all elements in the proper order.
+        // 把所有的元素都按正确的顺序写出来。
+        for (int i=0; i<size; i++) {
+            s.writeObject(elementData[i]);
+        }
+
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+    }
+    
+    /**
+     * Reconstitute the <tt>ArrayList</tt> instance from a stream (that is,
+     * deserialize it).
+     */
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        elementData = EMPTY_ELEMENTDATA;
+
+        // Read in size, and any hidden stuff
+        s.defaultReadObject();
+
+        // Read in capacity
+        s.readInt(); // ignored
+
+        if (size > 0) {
+            // be like clone(), allocate array based upon size not capacity
+            int capacity = calculateCapacity(elementData, size);
+            SharedSecrets.getJavaOISAccess().checkArray(s, Object[].class, capacity);
+            ensureCapacityInternal(size);
+
+            Object[] a = elementData;
+            // Read in all elements in the proper order.
+            for (int i=0; i<size; i++) {
+                a[i] = s.readObject();
+            }
+        }
     }
 }
