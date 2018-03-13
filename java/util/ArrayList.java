@@ -13,8 +13,6 @@ import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.Vector;
 
-import sun.misc.SharedSecrets;
-
 /**
  * Resizable-array implementation of the <tt>List</tt> interface.  Implements
  * all optional list operations, and permits all elements, including
