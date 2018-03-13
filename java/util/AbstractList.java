@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
+import java.util.RandomAccessSubList;
+import java.util.SubList;
 
 /**
  * This class provides a skeletal implementation of the {@link List}
@@ -321,6 +323,12 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         return listIterator(0);
     }
     
+    public ListIterator<E> listIterator(final int index) {
+        rangeCheckForAdd(index);
+
+        return new ListItr(index);
+    }
+    
     private class Itr implements Iterator<E> {
     	 
         /**
@@ -437,7 +445,6 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
             }
 		}
 
-		@Override
 		public void add(E e) {
 	           checkForComodification();
 
@@ -748,15 +755,15 @@ class SubList<E> extends AbstractList<E> {
         }
     }
     
-    class RandomAccessSubList<E> extends SubList<E> implements RandomAccess {
-        RandomAccessSubList(AbstractList<E> list, int fromIndex, int toIndex) {
-        	//TODO  疑问
-            super(list, fromIndex, toIndex);
-        }
-
-        public List<E> subList(int fromIndex, int toIndex) {
-            return new RandomAccessSubList<>(this, fromIndex, toIndex);
-        }
+class RandomAccessSubList<E> extends SubList<E> implements RandomAccess {
+    RandomAccessSubList(AbstractList<E> list, int fromIndex, int toIndex) {
+        super(list, fromIndex, toIndex);
     }
+
+    public List<E> subList(int fromIndex, int toIndex) {
+        return new RandomAccessSubList<>(this, fromIndex, toIndex);
+    }
+}
+    
 }
   
