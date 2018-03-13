@@ -12,7 +12,6 @@ package source.java.util;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -526,6 +525,41 @@ public interface Map<K,V> {
         int hashCode();
     }
     
+    // Comparison and hashing
 
+    /**
+     * Compares the specified object with this map for equality.  Returns
+     * <tt>true</tt> if the given object is also a map and the two maps
+     * represent the same mappings.  More formally, two maps <tt>m1</tt> and
+     * <tt>m2</tt> represent the same mappings if
+     * <tt>m1.entrySet().equals(m2.entrySet())</tt>.  This ensures that the
+     * <tt>equals</tt> method works properly across different implementations
+     * of the <tt>Map</tt> interface.
+     * 将指定的对象与此映射进行比较。如果给定的对象也是一个映射，并且两个映射表示相同的映射，则返回true。
+     * 更正式地说，如果m1.entryset（）=（m2.entryset（）），两个映射m1和m2表示相同的映射。
+     * 这确保了equals方法在映射接口的不同实现中正常工作。
+     * 
+     * @param o object to be compared for equality with this map
+     * @return <tt>true</tt> if the specified object is equal to this map
+     */
+    boolean equals(Object o);
+
+    /**
+     * Returns the hash code value for this map.  The hash code of a map is
+     * defined to be the sum of the hash codes of each entry in the map's
+     * <tt>entrySet()</tt> view.  This ensures that <tt>m1.equals(m2)</tt>
+     * implies that <tt>m1.hashCode()==m2.hashCode()</tt> for any two maps
+     * <tt>m1</tt> and <tt>m2</tt>, as required by the general contract of
+     * {@link Object#hashCode}.
+     * 
+     * 返回该映射的散列代码值。映射的散列码被定义为在map的entrySet（）视图中每个条目的散列码的和。
+     * 这确保m1.equals（m2）意味着m1.hashcode（）==m2.hashcode（），这是任何两个映射m1和m2的映射。
+     * 
+     * @return the hash code value for this map
+     * @see Map.Entry#hashCode()
+     * @see Object#equals(Object)
+     * @see #equals(Object)
+     */
+    int hashCode();
 }
   
