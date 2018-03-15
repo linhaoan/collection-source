@@ -10,6 +10,8 @@
 package source.java.util;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
@@ -387,5 +389,109 @@ public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>,Cloneable
         int h;
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
+    
+    static Class<?> comparableClassFor(Object x) {
+        if (x instanceof Comparable) {
+            Class<?> c; 
+            Type[] ts, as; 
+            Type t; 
+            ParameterizedType p;
+            if ((c = x.getClass()) == String.class)  {
+            	return c; // bypass checks
+            }              
+            if ((ts = c.getGenericInterfaces()) != null) {
+                for (int i = 0; i < ts.length; ++i) {
+                    if (((t = ts[i]) instanceof ParameterizedType) &&
+                        ((p = (ParameterizedType)t).getRawType() ==
+                         Comparable.class) &&
+                        (as = p.getActualTypeArguments()) != null &&
+                        as.length == 1 && as[0] == c) // type arg is c
+                        return c;
+                }
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Returns k.compareTo(x) if x matches kc (k's screened comparable
+     * class), else 0.
+     */
+    @SuppressWarnings({"rawtypes","unchecked"}) // for cast to Comparable
+    static int compareComparables(Class<?> kc, Object k, Object x) {
+        return (x == null || x.getClass() != kc ? 0 :
+                ((Comparable)k).compareTo(x));
+    }
+    
+    /**
+     * Returns a power of two size for the given target capacity.
+     */
+    static final int tableSizeFor(int cap) {
+        int n = cap - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+    }
+    
+    /* ---------------- Fields -------------- */
+
+    /**
+     * The table, initialized on first use, and resized as
+     * necessary. When allocated, length is always a power of two.
+     * (We also tolerate length zero in some operations to allow
+     * bootstrapping mechanics that are currently not needed.)
+     * 
+     * 在第一次使用时初始化的表，并根据需要调整大小。当分配时，长度总是2的幂。
+     * (在某些操作中，我们还容忍长度为零，以允许目前不需要的自举机制。)
+     * 
+     */
+    transient Node<K,V>[] table;
+
+    /**
+     * Holds cached entrySet(). Note that AbstractMap fields are used
+     * for keySet() and values().
+     * 保存缓存entrySet()。注意，AbstractMap字段用于keySet()和values()。
+     */
+    transient Set<Map.Entry<K,V>> entrySet;
+
+    /**
+     * The number of key-value mappings contained in this map.
+     * 此映射中包含的键值映射的数量。
+     */
+    transient int size;
+
+    /**
+     * The number of times this HashMap has been structurally modified
+     * Structural modifications are those that change the number of mappings in
+     * the HashMap or otherwise modify its internal structure (e.g.,
+     * rehash).  This field is used to make iterators on Collection-views of
+     * the HashMap fail-fast.  (See ConcurrentModificationException).
+     * 这个HashMap在结构上修改结构修改的次数是那些改变HashMap中的映射数量
+     * 或修改其内部结构(例如rehash)的那些。
+     * 该字段用于使迭代器对HashMap的集合视图快速失效。
+     * (见ConcurrentModificationException)。
+     */
+    transient int modCount;
+
+    /**
+     * The next size value at which to resize (capacity * load factor).
+     *要调整大小的下一个大小值(容量*负载系数)。
+     * @serial
+     */
+    // (The javadoc description is true upon serialization.
+    // Additionally, if the table array has not been allocated, this
+    // field holds the initial array capacity, or zero signifying
+    // DEFAULT_INITIAL_CAPACITY.)
+    int threshold;
+
+    /**
+     * The load factor for the hash table.
+     *
+     * @serial
+     */
+    final float loadFactor;
 }
   
