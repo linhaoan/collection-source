@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -558,6 +559,20 @@ public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>,Cloneable
     }
     
     /**
+     * Copies all of the mappings from the specified map to this map.
+     * These mappings will replace any mappings that this map had for
+     * any of the keys currently in the specified map.
+     * 将所有映射从指定映射复制到此映射。
+     * 这些映射将替换此映射对当前指定映射中任何键的任何映射。
+     * 
+     * @param m mappings to be stored in this map
+     * @throws NullPointerException if the specified map is null
+     */
+    public void putAll(Map<? extends K, ? extends V> m) {
+        putMapEntries(m, true);
+    }
+    
+    /**
      * Implements Map.putAll and Map constructor
      *
      * @param m the map
@@ -755,6 +770,125 @@ public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>,Cloneable
             }
         }
         return newTab;
+    }
+    
+    /**
+     * Replaces all linked nodes in bin at index for given hash unless
+     * table is too small, in which case resizes instead.
+     */
+    final void treeifyBin(Node<K,V>[] tab, int hash) {
+        int n, index; Node<K,V> e;
+        if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
+            resize();
+        else if ((e = tab[index = (n - 1) & hash]) != null) {
+            TreeNode<K,V> hd = null, tl = null;
+            do {
+                TreeNode<K,V> p = replacementTreeNode(e, null);
+                if (tl == null)
+                    hd = p;
+                else {
+                    p.prev = tl;
+                    tl.next = p;
+                }
+                tl = p;
+            } while ((e = e.next) != null);
+            if ((tab[index] = hd) != null)
+                hd.treeify(tab);
+        }
+    }
+    
+    /**
+     * Removes the mapping for the specified key from this map if present.
+     * 从该映射中删除指定键的映射。
+     * @param  key key whose mapping is to be removed from the map
+     * @return the previous value associated with <tt>key</tt>, or
+     *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+     *         (A <tt>null</tt> return can also indicate that the map
+     *         previously associated <tt>null</tt> with <tt>key</tt>.)
+     */
+    public V remove(Object key) {
+        Node<K,V> e;
+        return (e = removeNode(hash(key), key, null, false, true)) == null ?
+            null : e.value;
+    }
+    
+    /**
+     * Implements Map.remove and related methods
+     *
+     * @param hash hash for key
+     * @param key the key
+     * @param value the value to match if matchValue, else ignored
+     * @param matchValue if true only remove if value is equal
+     * @param movable if false do not move other nodes while removing
+     * @return the node, or null if none
+     */
+    final Node<K,V> removeNode(int hash, Object key, Object value,
+                               boolean matchValue, boolean movable) {
+        Node<K,V>[] tab; Node<K,V> p; int n, index;
+        if ((tab = table) != null && (n = tab.length) > 0 &&
+            (p = tab[index = (n - 1) & hash]) != null) {
+            Node<K,V> node = null, e; K k; V v;
+            if (p.hash == hash &&
+                ((k = p.key) == key || (key != null && key.equals(k))))
+                node = p;
+            else if ((e = p.next) != null) {
+                if (p instanceof TreeNode)
+                    node = ((TreeNode<K,V>)p).getTreeNode(hash, key);
+                else {
+                    do {
+                        if (e.hash == hash &&
+                            ((k = e.key) == key ||
+                             (key != null && key.equals(k)))) {
+                            node = e;
+                            break;
+                        }
+                        p = e;
+                    } while ((e = e.next) != null);
+                }
+            }
+            if (node != null && (!matchValue || (v = node.value) == value ||
+                                 (value != null && value.equals(v)))) {
+                if (node instanceof TreeNode)
+                    ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);
+                else if (node == p)
+                    tab[index] = node.next;
+                else
+                    p.next = node.next;
+                ++modCount;
+                --size;
+                afterNodeRemoval(node);
+                return node;
+            }
+        }
+        return null;
+    }
+    
+    /* ------------------------------------------------------------ */
+    // LinkedHashMap support
+
+
+    /*
+     * The following package-protected methods are designed to be
+     * overridden by LinkedHashMap, but not by any other subclass.
+     * Nearly all other internal methods are also package-protected
+     * but are declared final, so can be used by LinkedHashMap, view
+     * classes, and HashSet.
+     */
+
+    // Create a regular (non-tree) node
+    Node<K,V> newNode(int hash, K key, V value, Node<K,V> next) {
+        return new Node<>(hash, key, value, next);
+    }
+    
+    
+    static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
+        TreeNode<K,V> parent;  // red-black tree links
+        TreeNode<K,V> left;
+        TreeNode<K,V> right;
+        TreeNode<K,V> prev;    // needed to unlink next upon deletion
+        boolean red;
+        
+        
     }
 }
   
