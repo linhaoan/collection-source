@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.HashMap.Node;
-import java.util.HashMap.TreeNode;
 
 /**
  * Hash table based implementation of the <tt>Map</tt> interface.  This

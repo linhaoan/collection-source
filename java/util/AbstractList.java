@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
-import java.util.RandomAccessSubList;
-import java.util.SubList;
 
 /**
  * This class provides a skeletal implementation of the {@link List}
